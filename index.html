@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pomodoro Boss Fight</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --panel:#101622; --panel-2:#0d1320; --text:#e6edf3; --muted:#9aa4b2;
+      --accent:#7cafff; --accent-2:#6ee7b7; --danger:#ff6b6b; --warn:#ffd166;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:radial-gradient(1200px 600px at 70% -10%, #162033 0%, var(--bg) 40%);
+      color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial}
+    a{color:var(--accent)}
+
+    /* Layout */
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+    .hidden{display:none}
+    .grid{display:grid;gap:16px}
+    .grid-3{grid-template-columns: 1.4fr 1fr 1.2fr}
+    @media (max-width: 900px){.grid-3{grid-template-columns:1fr}}
+
+    .card{background:linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+      border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:16px;box-shadow:var(--shadow);margin-top: 1rem}
+    .title{font-size:clamp(28px,4.2vw,48px);font-weight:800;letter-spacing:.4px;margin:0 0 12px}
+    .sub{color:var(--muted);margin:4px 0 24px}
+    .btn{appearance:none;border:0;background:var(--accent);color:#081020;font-weight:700;padding:12px 16px;border-radius:12px;cursor:pointer}
+    .btn:hover{filter:brightness(1.05)}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .btn-secondary{background:#202a3b;color:var(--text);border:1px solid rgba(255,255,255,.12)}
+    .btn-danger{background:var(--danger);color:white}
+    .btn-ghost{background:transparent;border:1px dashed rgba(255,255,255,.18);color:var(--muted)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .space{height:10px}
+
+    /* Welcome page */
+    .hero{display:grid;grid-template-columns: 1.15fr 1fr; gap:24px; align-items:center}
+    @media (max-width: 900px){.hero{grid-template-columns:1fr}}
+    .hero .big{font-size:clamp(42px,6.2vw,72px);font-weight:900;line-height:1.05;margin:0}
+    .hero .card{padding:22px}
+    .pill{display:inline-flex;gap:8px;align-items:center;background:#111a2b;border:1px solid rgba(255,255,255,.08);padding:8px 12px;border-radius:999px;color:var(--muted);font-weight:600}
+
+    /* Bars */
+    .bar{height:14px;background:#1a2333;border-radius:999px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+    .bar>span{display:block;height:100%;width:0;transition: width .25s ease}
+    .hp-player{background:linear-gradient(90deg,#79f2c0,#2ce3b6)}
+    .hp-boss{background:linear-gradient(90deg,#8ab6ff,#3b82f6)}
+
+    /* Boss card */
+    .boss-card{position:relative;overflow:hidden;margin-top: 1rem}
+    .boss-top{display:flex;align-items:center;gap:12px}
+    .boss-avatar{width:92px;height:92px;border-radius:16px;background:#19233a;border:1px solid rgba(255,255,255,.08);display:grid;place-items:center;overflow:hidden}
+    .boss-avatar img{width:100%;height:100%;object-fit:cover}
+    .placeholder{font-size:12px;color:var(--muted);text-align:center;padding:8px}
+    .boss-name{font-size:22px;font-weight:800;margin:0}
+    .badge{font-size:12px;padding:2px 8px;border-radius:999px;background:#1a2740;border:1px solid rgba(255,255,255,.12);color:#cde0ff;font-weight:700}
+    .log{height:170px;overflow:auto;background:#0c1422;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;font-size:13px}
+    .log-line{margin:0 0 4px}
+
+    /* Timer */
+    .timer{display:grid;gap:8px;justify-items:center;margin-top: 1rem}
+    .time{font-variant-numeric:tabular-nums; font-size:64px;font-weight:900; letter-spacing:1px}
+    select{background:#0f1626;color:var(--text);border:1px solid rgba(255,255,255,.18);padding:10px;border-radius:10px}
+
+    /* Animations */
+    .shake{animation:shake .3s ease}
+    @keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}100%{transform:translateX(0)}}
+    .pop{animation:pop .35s ease}
+    @keyframes pop{0%{transform:scale(.96)}100%{transform:scale(1)}}
+
+    footer{color:var(--muted);text-align:center;margin:32px 0 0}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- WELCOME / LANDING -->
+    <section id="screen-welcome" class="grid hero">
+      <div>
+        <div class="pill">⏱️ Pomodoro + ⚔️ Boss Fight = Focus XP</div>
+        <h1 class="big">Turn study sprints into <span style="color:var(--accent)">boss battles</span>.</h1>
+        <p class="sub">Pomodoro = short, focused bursts (usually 25 minutes) with breaks. Each completed sprint lands a hit on the boss. Quit early? The boss hits <em>you</em>. Keep a streak and level up to face tougher enemies.</p>
+        <ul>
+          <li><strong>Work</strong> in 15/25/35/45 min sprints.</li>
+          <li><strong>Finish</strong> a sprint → deal <b>25</b> damage.</li>
+          <li><strong>Quit</strong> early → you take <b>12</b> damage.</li>
+          <li><strong>Every 7 clears</strong> → boss level up (new name, more HP).</li>
+        </ul>
+        <div class="row">
+          <button class="btn" id="btn-continue">Continue →</button>
+          <button class="btn btn-ghost" id="btn-skip-info">I already know Pomodoro</button>
+        </div>
+      </div>
+      <div class="card pop">
+        <h2 class="title">How it works</h2>
+        <ol>
+          <li>Pick a duration from the dropdown (25 is classic).</li>
+          <li>Hit <b>Start</b> and focus on a single task. No switching.</li>
+          <li>When the timer ends, you smack the boss for <b>25</b> HP.</li>
+          <li>Break, breathe, brag. Then run it back.</li>
+        </ol>
+        <p class="sub">Tip: Use this with a to‑do list. Each sprint = one bite‑sized task.</p>
+      </div>
+    </section>
+
+    <!-- APP -->
+    <section id="screen-app" class="hidden">
+      <div class="grid grid-3">
+        <!-- BOSS -->
+        <div class="card boss-card" id="boss-card">
+          <div class="boss-top">
+            <div class="boss-avatar" title="Boss image">
+              <!-- 🔁 Replace the src below with your own images per level/tier if you want. -->
+              <!-- Example: setBossImage(`/images/tier-${tier}/boss-${index}.png`) in spawnBoss(). -->
+              <img id="bossImage" alt="Boss" src="boss1.jpg" />
+            </div>
+            <div>
+              <div class="row" style="align-items:baseline;gap:8px">
+                <h3 class="boss-name" id="bossName">Slime</h3>
+                <span class="badge" id="bossTier">Tier 1</span>
+              </div>
+              <div class="bar" title="Boss HP"><span class="hp-boss" id="bossHpBar"></span></div>
+              <div class="sub" style="margin-top:6px"><span id="bossHpText">50 / 50</span> HP</div>
+            </div>
+          </div>
+          <div class="space"></div>
+          <div>
+            <h4 style="margin:0 0 8px">Battle Log</h4>
+            <div class="log" id="log"></div>
+          </div>
+        </div>
+
+        <!-- TIMER -->
+        <div class="card timer">
+          <h2 class="title" style="margin:0">Pomodoro</h2>
+          <div class="row">
+            <label for="duration">Duration:</label>
+            <select id="duration"> 
+              <option value="15">15 min</option>
+              <option value="25" selected>25 min</option>
+              <option value="35">35 min</option>
+              <option value="45">45 min</option>
+            </select>
+          </div>
+          <div class="time" id="time">25:00</div>
+          <div class="row">
+            <button id="start" class="btn">Start</button>
+            <button id="quit" class="btn btn-danger">Quit</button>
+            <button id="reset" class="btn btn-secondary">Reset</button>
+          </div>
+          <p class="sub" id="status">Ready. Lock in. 👇</p>
+        </div>
+
+        <!-- PLAYER -->
+        <div class="card">
+          <h3 style="margin:0 0 6px">Player</h3>
+          <div class="bar" title="Player HP"><span class="hp-player" id="playerHpBar"></span></div>
+          <div class="sub" style="margin-top:6px"><span id="playerHpText">50 / 50</span> HP</div>
+          <div class="space"></div>
+          <div class="row">
+            <div class="badge">Streak: <span id="streak">0</span></div>
+            <div class="badge">Clears to next tier: <span id="toNext">7</span></div>
+          </div>
+          <div class="space"></div>
+          <p class="sub">Die (HP 0) → your streak resets and your HP goes back to 50. Boss stays. Skill issue? Maybe. We move. 😤</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // =============================
+    // GAME STATE
+    // =============================
+    const logEl = document.getElementById('log');
+    const bossNameEl = document.getElementById('bossName');
+    const bossTierEl = document.getElementById('bossTier');
+    const bossHpBar = document.getElementById('bossHpBar');
+    const bossHpText = document.getElementById('bossHpText');
+    const bossCard = document.getElementById('boss-card');
+    const bossImg = document.getElementById('bossImage');
+
+    const playerHpBar = document.getElementById('playerHpBar');
+    const playerHpText = document.getElementById('playerHpText');
+
+    const streakEl = document.getElementById('streak');
+    const toNextEl = document.getElementById('toNext');
+
+    const timeEl = document.getElementById('time');
+    const statusEl = document.getElementById('status');
+    const durationSel = document.getElementById('duration');
+
+    const startBtn = document.getElementById('start');
+    const quitBtn = document.getElementById('quit');
+    const resetBtn = document.getElementById('reset');
+
+    const screenWelcome = document.getElementById('screen-welcome');
+    const screenApp = document.getElementById('screen-app');
+    document.getElementById('btn-continue').onclick = () => showApp();
+    document.getElementById('btn-skip-info').onclick = () => showApp();
+
+    const DMG_ON_FINISH = 25; // spec: fixed 25 dmg on finish
+    const DMG_ON_QUIT = 12;   // spec: player takes 12 on quit
+    const PLAYER_MAX = 50;
+
+    // Boss name pools by tier (feel free to edit)
+    const NAMES = {
+      1: ['Slime','Kobold','Goblin','Bat Swarm','Gremlin'],
+      2: ['Orc Brute','Bandit Chief','Dire Wolf','Viper Mage','Bone Archer'],
+      3: ['Stone Golem','Wraith','Lich Acolyte','Minotaur','Warlock'],
+      4: ['Fire Drake','Frost Wyvern','Nightmare','Storm Titan','Hydra Head'],
+      5: ['Ancient Dragon','Void Walker','Abyssal King','Celestial Judge','Eldritch Core']
+    };
+
+
+    // Example: one set for Tier 1, another for Tier 2, etc.
+    const BOSS_IMAGES = {
+    1: {
+        normal: "boss1.jpg",
+        hurt:   "boss1_hit.jpg",
+        attack: "boss1_attack.jpg"
+    },
+    2: {
+        normal: "boss2.jpg",
+        hurt:   "boss2_hit.jpg",
+        attack: "boss2_attack.jpg"
+    },
+    3: {
+        normal: "boss3.jpg",
+        hurt:   "boss3_hit.jpg",
+        attack: "boss3_attack.jpg"
+    }
+    // …add more as needed
+    };
+
+
+    const state = {
+      running:false, remaining: 25*60, target: 25*60, tickId:null,
+      streak:0, clearsThisTier:0, tier:1, bossIndex:1,
+      playerHP:PLAYER_MAX,
+      boss:{ name:'Slime', hp:50, max:50 }
+    };
+
+    // =============================
+    // UTIL
+    // =============================
+    const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+    const fmtTime = (s)=>{
+      const m = Math.floor(s/60).toString().padStart(2,'0');
+      const r = Math.floor(s%60).toString().padStart(2,'0');
+      return `${m}:${r}`;
+    }
+    function log(msg){
+      const p=document.createElement('p'); p.className='log-line'; p.textContent=msg; logEl.appendChild(p); logEl.scrollTop=logEl.scrollHeight;
+    }
+    function setStatus(msg){ statusEl.textContent = msg; }
+    function setBossImage(url){ bossImg.src = url; }
+
+    // =============================
+    // BOSS / PLAYER RENDER
+    // =============================
+    function renderBars(){
+      // boss
+      const bPct = (state.boss.hp/state.boss.max)*100; bossHpBar.style.width = `${bPct}%`;
+      bossHpText.textContent = `${state.boss.hp} / ${state.boss.max}`;
+      // player
+      const pPct = (state.playerHP/PLAYER_MAX)*100; playerHpBar.style.width = `${pPct}%`;
+      playerHpText.textContent = `${state.playerHP} / ${PLAYER_MAX}`;
+      // meta
+      bossNameEl.textContent = state.boss.name;
+      bossTierEl.textContent = `Tier ${state.tier}`;
+      streakEl.textContent = state.streak;
+      const toNext = 7 - (state.clearsThisTier % 7 || 0);
+      toNextEl.textContent = (state.clearsThisTier % 7 === 0 && state.clearsThisTier!==0) ? 7 : toNext;
+    }
+
+    function bossShake(){ bossCard.classList.remove('shake'); void bossCard.offsetWidth; bossCard.classList.add('shake'); }
+
+    function spawnBoss(){
+      const base = 50;                    // base hp
+      const tierBonus = (state.tier-1)*30; // +30 per tier
+      const scaling = Math.floor(state.bossIndex*5); // tiny ramp per spawn
+      const max = base + tierBonus + scaling;
+      const pool = NAMES[state.tier] || NAMES[5];
+      const name = pool[Math.floor(Math.random()*pool.length)];
+      state.boss = { name, hp:max, max };
+      state.bossIndex++;
+
+      // 🔁 OPTIONAL: set a custom image per tier/spawn.
+      // Example file structure you can use: /images/tier-<tier>/boss-<index>.png
+      // setBossImage(`/images/tier-${state.tier}/boss-${state.bossIndex%5}.png`);
+
+      log(`🆕 A new boss appears: ${name} (HP ${max}).`);
+      renderBars();
+    }
+
+    function dealToBoss(amount){
+      state.boss.hp = clamp(state.boss.hp - amount, 0, state.boss.max);
+      renderBars(); bossShake();
+      if(state.boss.hp===0){
+        log(`💥 You defeated ${state.boss.name}!`);
+        // If this clear is the 7th in the tier, level up the tier for the NEXT boss
+        state.clearsThisTier++;
+        state.streak++;
+        setStatus(`Nice. +1 streak → ${state.streak}.`);
+        if(state.clearsThisTier % 7 === 0){
+          state.tier++;
+          log(`⬆️ Boss leveled up! Welcome to Tier ${state.tier}.`);
+        }
+        spawnBoss()
+        setBossImage(`boss1_attack.jpg`);
+      }
+    }
+
+    function dealToPlayer(amount){
+      state.playerHP = clamp(state.playerHP - amount, 0, PLAYER_MAX);
+      renderBars();
+      if(state.playerHP===0){
+        log(`☠️ You died. Streak reset.`);
+        state.streak = 0; state.clearsThisTier = 0; toNextEl.textContent = 7; streakEl.textContent = 0;
+        state.playerHP = PLAYER_MAX; renderBars();
+      }
+    }
+
+    // =============================
+    // TIMER
+    // =============================
+    function setDurationFromSelect(){
+      const mins = parseInt(durationSel.value,10);
+      state.target = mins*60; state.remaining = state.target; timeEl.textContent = fmtTime(state.remaining);
+    }
+    durationSel.addEventListener('change', ()=>{ if(!state.running){ setDurationFromSelect(); setStatus('Ready.'); }});
+
+    function start(){
+      if(state.running) return; // no double start
+      state.running = true; startBtn.disabled = true; durationSel.disabled = true;
+      setStatus('Focus mode: ON. Do not touch your phone.');
+      const t0 = Date.now();
+      const endAt = t0 + state.remaining*1000;
+      state.tickId = setInterval(()=>{
+        const now = Date.now();
+        state.remaining = Math.max(0, Math.round((endAt - now)/1000));
+        timeEl.textContent = fmtTime(state.remaining);
+        if(state.remaining<=0){
+          clearInterval(state.tickId); state.running=false; startBtn.disabled=false; durationSel.disabled=false;
+          onFinish();
+        }
+      }, 250);
+    }
+
+    function onFinish(){
+      timeEl.textContent = fmtTime(0);
+      log(`✅ Pomodoro complete. You dealt ${DMG_ON_FINISH} damage!`);
+      dealToBoss(DMG_ON_FINISH);
+      setDurationFromSelect();
+      setStatus('Break time. Hydrate. ✨');
+    }
+
+    function quit(){
+      if(!state.running){ setStatus('Nothing to quit. Start first.'); return; }
+      clearInterval(state.tickId); state.running=false; startBtn.disabled=false; durationSel.disabled=false;
+      log(`🛑 You quit early. You take ${DMG_ON_QUIT} damage.`);
+      dealToPlayer(DMG_ON_QUIT);
+      setDurationFromSelect();
+      setStatus('Ouch. Reset and try again.');
+    }
+
+    function reset(){
+      if(state.running){ clearInterval(state.tickId); state.running=false; startBtn.disabled=false; durationSel.disabled=false; }
+      setDurationFromSelect();
+      setStatus('Reset. Fresh start.');
+    }
+
+    // =============================
+    // NAV / INIT
+    // =============================
+    function showApp(){ screenWelcome.classList.add('hidden'); screenApp.classList.remove('hidden'); }
+
+    startBtn.addEventListener('click', start);
+    quitBtn.addEventListener('click', quit);
+    resetBtn.addEventListener('click', reset);
+
+    // Initial setup
+    setDurationFromSelect();
+    renderBars();
+    log('Welcome to Pomodoro Boss Fight. Press Start when ready.');
+
+
+    function currentBossImages() {
+    return BOSS_IMAGES[state.tier] || BOSS_IMAGES[1]; // fallback
+    }
+    
+    
+    function flashBossImage(type, duration = 450) {
+    const imgs = currentBossImages();
+    let tempImg = imgs.normal;
+    if (type === "hurt") tempImg = imgs.hurt;
+    if (type === "attack") tempImg = imgs.attack;
+
+    setBossImage(tempImg);
+    setTimeout(() => setBossImage(imgs.normal), duration);
+    }
+    function dealToBoss(amount){
+        state.boss.hp = clamp(state.boss.hp - amount, 0, state.boss.max);
+        renderBars(); 
+        bossShake();
+
+        flashBossImage("hurt");
+
+        if(state.boss.hp === 0){
+            log(`💥 You defeated ${state.boss.name}!`);
+            state.clearsThisTier++;
+            state.streak++;
+            setStatus(`Nice. +1 streak → ${state.streak}.`);
+            if(state.clearsThisTier % 7 === 0){
+            state.tier++;
+            log(`⬆️ Boss leveled up! Welcome to Tier ${state.tier}.`);
+            }
+            spawnBoss(); // new boss image will appear here
+        }
+        }
+
+        function dealToPlayer(amount){
+        state.playerHP = clamp(state.playerHP - amount, 0, PLAYER_MAX);
+        renderBars();
+
+        flashBossImage("attack");
+
+        if(state.playerHP === 0){
+            log(`☠️ You died. Streak reset.`);
+            state.streak = 0; 
+            state.clearsThisTier = 0;
+            toNextEl.textContent = 7; 
+            streakEl.textContent = 0;
+            state.playerHP = PLAYER_MAX; 
+            renderBars();
+        }
+    }
+    function spawnBoss(){
+        const base = 50;                    
+        const tierBonus = (state.tier-1)*30;
+        const scaling = Math.floor(state.bossIndex*5);
+        const max = base + tierBonus + scaling;
+        const pool = NAMES[state.tier] || NAMES[5];
+        const name = pool[Math.floor(Math.random()*pool.length)];
+        state.boss = { name, hp:max, max };
+        state.bossIndex++;
+
+        // set new normal boss image
+        const imgs = currentBossImages();
+        setBossImage(imgs.normal);
+
+        log(`🆕 A new boss appears: ${name} (HP ${max}).`);
+        renderBars();
+    }
+
+
+
+
+  </script>
+</body>
+</html>
