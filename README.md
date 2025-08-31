@@ -23,10 +23,14 @@ Feature 3 – Player HP and streak counter, activity log
 🛠️ Tech Stack
 
 Frontend: HTML, CSS, JavaScript
+
 Backend: not required
+
 Database: Not required (logic fully handled on frontend)
+
 git clone https://github.com/angled-angel/POMODORO-BOSSFIGHT.git 
 
+https://raw.githack.com/angled-angel/POMODORO-BOSSFIGHT/refs/heads/main/index.html
 
 VIDEO DEMO: https://drive.google.com/file/d/1PtyyF9RMZI-KwPK15sH8tQ6Eh_4WpU9k/view?usp=drivesdk
 
