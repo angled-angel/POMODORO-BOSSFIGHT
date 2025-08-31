@@ -9,7 +9,7 @@ alan - GCQ4Q5SUHZYPKWZM
 
 🎮 Project Overview
 
-Project Name: Pomodorp bossfight
+Project Name: Pomodoro bossfight
 
 Theme Fit: Explain how your project applies Gamify Everything
 
