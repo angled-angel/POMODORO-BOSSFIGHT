@@ -2,9 +2,12 @@ Team Name: Cache Control
 
 Team Members: afidhaps, alna0143, darkpanthergaming, lok_y
 
-Membership IDs:agnel - 3H2J4AB5BHATT9OX
+Membership IDs: agnel - 3H2J4AB5BHATT9OX
+
 afidha - U63TDURQQOI3GCTM
+
 alna - JSLEK40FIWJV6U4J
+
 alan - GCQ4Q5SUHZYPKWZM 
 
 🎮 Project Overview
@@ -14,10 +17,13 @@ Project Name: Pomodoro bossfight
 Theme Fit: Explain how your project applies Gamify Everything
 
 Short Description (2–3 lines): A pomodoro timer
+
 ✨ Features
 
 Feature 1 – can change timers(25 min, 15 min, 35 min)
+
 Feature 2 – Boss system with HP, evolving avatars, and attack animations.
+
 Feature 3 – Player HP and streak counter, activity log
 
 🛠️ Tech Stack
